@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Autoware Foundation. All rights reserved.
+ * Copyright 2016-2020 Autoware Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,8 +55,9 @@ namespace WayPlannerNS {
 
 #define MAX_GLOBAL_PLAN_SEARCH_DISTANCE 10000
 #define MIN_EXTRA_PLAN_DISTANCE 100 //meters
-#define _ENABLE_VISUALIZE_PLAN
+#define ENABLE_VISUALIZE_PLAN
 #define REPLANNING_DISTANCE 25
+
 class AutowareRoadNetwork
 {
 public:
@@ -100,24 +101,29 @@ class WayPlannerParams
 {
 public:
 	std::string 	KmlMapPath;
-	bool 			bEnableSmoothing;
-	bool 			bEnableLaneChange;
-	bool 			bEnableHMI;
-	bool 			bEnableRvizInput;
-	bool 			bEnableReplanning;
-	double 			pathDensity;
+	bool 		bEnableSmoothing;
+	bool 		bEnableLaneChange;
+	bool 		bEnableHMI;
+	bool 		bEnableRvizInput;
+	bool 		bEnableReplanning;
+	double 		pathDensity;
+        double          fallbackMinGoalDistanceTh;
+        int             planningMaxAttempt;
 	MAP_SOURCE_TYPE	mapSource;
 
 
 	WayPlannerParams()
 	{
-		bEnableReplanning	= false;
-		bEnableHMI			= false;
-		bEnableSmoothing 	= false;
-		bEnableLaneChange 	= false;
-		bEnableRvizInput 	= true;
-		pathDensity			= 0.5;
-		mapSource 			= MAP_KML_FILE;
+		bEnableReplanning	  = false;
+		bEnableHMI		  = false;
+		bEnableHMI		  = false;
+		bEnableSmoothing 	  = false;
+		bEnableLaneChange 	  = false;
+		bEnableRvizInput 	  = true;
+		pathDensity		  = 0.5;
+                fallbackMinGoalDistanceTh = 0.0;
+                planningMaxAttempt        = 0;
+		mapSource 		  = MAP_KML_FILE;
 	}
 };
 

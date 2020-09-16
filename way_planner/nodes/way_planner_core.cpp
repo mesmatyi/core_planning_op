@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Autoware Foundation. All rights reserved.
+ * Copyright 2016-2020 Autoware Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,18 @@ way_planner_core::way_planner_core()
 	nh.getParam("/way_planner/enableRvizInput" 		, m_params.bEnableRvizInput);
 	nh.getParam("/way_planner/enableReplan" 		, m_params.bEnableReplanning);
 	nh.getParam("/way_planner/enableHMI" 			, m_params.bEnableHMI);
+        nh.getParam("/way_planner/fallbackMinGoalDistanceTh" , m_params.fallbackMinGoalDistanceTh);
+        nh.getParam("/way_planner/planningMaxAttempt", m_params.planningMaxAttempt);
+
+        // The planning max attempt feature parameter cannot be below zero
+        if (m_params.planningMaxAttempt < 0) {
+          m_params.planningMaxAttempt = 0;
+        }
+
+        // The fallback min goal distance threshold feature parameter cannot be below zero
+        if (m_params.fallbackMinGoalDistanceTh < 0) {
+          m_params.fallbackMinGoalDistanceTh = 0;
+        }
 
 	int iSource = 0;
 	nh.getParam("/way_planner/mapSource" 			, iSource);
@@ -263,7 +275,7 @@ bool way_planner_core::GenerateGlobalPlan(PlannerHNS::WayPoint& startPoint, Plan
 
 	generatedTotalPaths.clear();
 #ifdef ENABLE_VISUALIZE_PLAN
-	if(m_PlanningVisualizeTree.size() > 0)
+  if(m_PlanningVisualizeTree.size() > 0)
 	{
 		m_PlannerH.DeleteWaypoints(m_PlanningVisualizeTree);
 		m_AccumPlanLevels.markers.clear();
@@ -274,23 +286,26 @@ bool way_planner_core::GenerateGlobalPlan(PlannerHNS::WayPoint& startPoint, Plan
 	std::vector<int> predefinedLanesIds;
 	double ret = m_PlannerH.PlanUsingDP(startPoint, goalPoint,
 			MAX_GLOBAL_PLAN_DISTANCE, predefinedLanesIds,
-			m_Map, generatedTotalPaths, &m_PlanningVisualizeTree);
+			m_Map, generatedTotalPaths, &m_PlanningVisualizeTree,
+                        m_params.fallbackMinGoalDistanceTh);
 
 	m_pCurrGoal = PlannerHNS::MappingHelpers::GetClosestWaypointFromMap(goalPoint, m_Map);
 
 #else
-	std::vector<int> predefinedLanesIds;
+  std::vector<int> predefinedLanesIds;
 
-	double planning_distance = pow((m_CurrentPose.v), 2);
-	if(planning_distance < MIN_EXTRA_PLAN_DISTANCE)
-	{
-		planning_distance = MIN_EXTRA_PLAN_DISTANCE;
-	}
+  double planning_distance = pow((m_CurrentPose.v), 2);
+  if(planning_distance < MIN_EXTRA_PLAN_DISTANCE)
+  {
+    planning_distance = MIN_EXTRA_PLAN_DISTANCE;
+  }
 
-	double ret = m_PlannerH.PlanUsingDP(startPoint, goalPoint,
-			MAX_GLOBAL_PLAN_SEARCH_DISTANCE, planning_distance, m_params.bEnableLaneChange,
-					predefinedLanesIds,
-					m_Map, generatedTotalPaths);
+  double ret = m_PlannerH.PlanUsingDP(startPoint, goalPoint,
+                                      MAX_GLOBAL_PLAN_SEARCH_DISTANCE, planning_distance, m_params.bEnableLaneChange,
+                                      predefinedLanesIds,
+                                      m_Map, generatedTotalPaths);
+                                      m_Map, generatedTotalPaths, nullptr,
+                                      m_params.fallbackMinGoalDistanceTh);
 #endif
 
 if(m_params.bEnableHMI)
@@ -560,6 +575,7 @@ void way_planner_core::PlannerMainLoop()
 	ros::Rate loop_rate(10);
 	timespec animation_timer;
 	UtilityHNS::UtilityH::GetTickCount(animation_timer);
+        int newPlanTry = 0;
 
 	while (ros::ok())
 	{
@@ -639,11 +655,18 @@ void way_planner_core::PlannerMainLoop()
 			{
 
 					bool bNewPlan = GenerateGlobalPlan(startPoint, goalPoint, m_GeneratedTotalPaths);
+                                        // If the maximum attempt feature is enabled, increase the counter
+                                        if (m_params.planningMaxAttempt != 0)
+                                        {
+                                          newPlanTry++;
+                                        }
 
 					if(bNewPlan)
 					{
-						bMakeNewPlan = false;
-						VisualizeAndSend(m_GeneratedTotalPaths);
+                                          //Reset the newPlanTry as we have found the path
+                                          newPlanTry = 0;
+                                          bMakeNewPlan = false;
+                                          VisualizeAndSend(m_GeneratedTotalPaths);
 #ifdef ENABLE_VISUALIZE_PLAN
 						//calculate new max_cost
 						if(m_PlanningVisualizeTree.size() > 1)
@@ -657,8 +680,28 @@ void way_planner_core::PlannerMainLoop()
 							}
 						}
 #endif
-					}
-			}
+
+                                        }
+                                        else
+                                        {
+                                          // If we retried enough, remove the goal from the queue
+                                          if(newPlanTry >= m_params.planningMaxAttempt)
+                                          {
+
+                                            ROS_WARN("%s (tried %d times), %s",
+                                                     "way_planner: Unable to plan the path",
+                                                     m_params.planningMaxAttempt,
+                                                     "removing the goal");
+                                            m_GoalsPos.erase(m_GoalsPos.begin() + m_iCurrentGoalIndex);
+                                            newPlanTry = 0;
+                                          }
+                                          else
+                                          {
+                                            // Retry for m_params.planningMaxAttempt times
+                                            ROS_WARN("way_planner: Unable to plan the requested goal path, will retry");
+                                          }
+                                        }
+                        }
 
 #ifdef ENABLE_VISUALIZE_PLAN
 			if(UtilityHNS::UtilityH::GetTimeDiffNow(animation_timer) > 0.5)
