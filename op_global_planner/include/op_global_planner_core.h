@@ -19,16 +19,7 @@
 
 #include <ros/ros.h>
 
-#include "vector_map_msgs/PointArray.h"
-#include "vector_map_msgs/LaneArray.h"
-#include "vector_map_msgs/NodeArray.h"
-#include "vector_map_msgs/StopLineArray.h"
-#include "vector_map_msgs/DTLaneArray.h"
-#include "vector_map_msgs/LineArray.h"
-#include "vector_map_msgs/AreaArray.h"
-#include "vector_map_msgs/SignalArray.h"
-#include "vector_map_msgs/StopLine.h"
-#include "vector_map_msgs/VectorArray.h"
+
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 #include <geometry_msgs/Vector3Stamped.h>
@@ -53,6 +44,7 @@
 #include "op_planner/MappingHelpers.h"
 #include "op_planner/PlannerH.h"
 #include "op_utility/DataRW.h"
+#include "op_ros_helpers/ROSMapHandler.h"
 
 
 namespace GlobalPlanningNS
@@ -60,13 +52,10 @@ namespace GlobalPlanningNS
 
 #define MAX_GLOBAL_PLAN_SEARCH_DISTANCE 100000 //meters
 #define MIN_EXTRA_PLAN_DISTANCE 100 //meters
-//#define REPLANNING_DISTANCE 2.5
-//#define REPLANNING_TIME 5
 
 class GlobalPlanningParams
 {
 public:
-	PlannerHNS::MAP_SOURCE_TYPE	mapSource; //which map source user wants to select, using autoware loaded map, load vector mapt from file, use kml map file, use lanelet2 map file.
 	std::string mapPath; //path to map file or folder, depending on the mapSource parameter
 	std::string exprimentName; //folder name that will contains generated global path logs, when new global path is generated a .csv file will be written.
 	std::string destinationsFile; //file path of the list of destinations for the global path to achieve.
@@ -89,7 +78,6 @@ public:
 		bEnableLaneChange = false;
 		bEnableRvizInput = true;
 		pathDensity = 0.5;
-		mapSource = PlannerHNS::MAP_KML_FILE;
 		endOfPathDistance = 0.5;
 		slowDownSpeed = 15;
 	}
@@ -146,7 +134,7 @@ protected:
 	ros::Subscriber sub_can_info;
 	ros::Subscriber sub_road_status_occupancy;
 	ros::Subscriber sub_hmi_mission;
-	ros::Subscriber sub_map_file_name;
+//	ros::Subscriber sub_map_file_name;
 	ros::Subscriber sub_v2x_obstacles;
 
 public:
@@ -175,7 +163,6 @@ private:
 
   protected:
   	PlannerHNS::RoadNetwork m_Map;
-  	bool m_bMap;
   	PlannerHNS::PlannerH m_PlannerH;
   	std::vector<std::vector<PlannerHNS::WayPoint> > m_GeneratedTotalPaths;
 
@@ -197,42 +184,7 @@ private:
 
 
   	//Mapping Section
-  	UtilityHNS::MapRaw m_MapRaw;
-  	ros::Subscriber sub_bin_map;
-	ros::Subscriber sub_lanes;
-	ros::Subscriber sub_points;
-	ros::Subscriber sub_dt_lanes;
-	ros::Subscriber sub_intersect;
-	ros::Subscriber sup_area;
-	ros::Subscriber sub_lines;
-	ros::Subscriber sub_stop_line;
-	ros::Subscriber sub_signals;
-	ros::Subscriber sub_vectors;
-	ros::Subscriber sub_curbs;
-	ros::Subscriber sub_edges;
-	ros::Subscriber sub_way_areas;
-	ros::Subscriber sub_cross_walk;
-	ros::Subscriber sub_nodes;
-
-
-	void callbackGetLanelet2(const autoware_lanelet2_msgs::MapBin& msg);
-	void callbackGetVMLanes(const vector_map_msgs::LaneArray& msg);
-	void callbackGetVMPoints(const vector_map_msgs::PointArray& msg);
-	void callbackGetVMdtLanes(const vector_map_msgs::DTLaneArray& msg);
-	void callbackGetVMIntersections(const vector_map_msgs::CrossRoadArray& msg);
-	void callbackGetVMAreas(const vector_map_msgs::AreaArray& msg);
-	void callbackGetVMLines(const vector_map_msgs::LineArray& msg);
-	void callbackGetVMStopLines(const vector_map_msgs::StopLineArray& msg);
-	void callbackGetVMSignal(const vector_map_msgs::SignalArray& msg);
-	void callbackGetVMVectors(const vector_map_msgs::VectorArray& msg);
-	void callbackGetVMCurbs(const vector_map_msgs::CurbArray& msg);
-	void callbackGetVMRoadEdges(const vector_map_msgs::RoadEdgeArray& msg);
-	void callbackGetVMWayAreas(const vector_map_msgs::WayAreaArray& msg);
-	void callbackGetVMCrossWalks(const vector_map_msgs::CrossWalkArray& msg);
-	void callbackGetVMNodes(const vector_map_msgs::NodeArray& msg);
-	void kmlMapFileNameCallback(const std_msgs::String& file_name);
-	void LoadKmlMap();
-	void LoadMap();
+  	PlannerHNS::MapHandler m_MapHandler;
 
 	/**
 	 * Animate Global path generation
