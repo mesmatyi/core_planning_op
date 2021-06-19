@@ -18,31 +18,26 @@
 #define OP_BEHAVIOR_SELECTOR_CORE
 
 #include <ros/ros.h>
-
-#include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
-#include <nav_msgs/Odometry.h>
 #include <autoware_msgs/LaneArray.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Bool.h>
-#include <geometry_msgs/TwistWithCovarianceStamped.h>
-#include <autoware_can_msgs/CANInfo.h>
 #include <autoware_msgs/DetectedObjectArray.h>
 #include <autoware_msgs/TrafficLight.h>
 #include <autoware_msgs/Signals.h>
 #include <autoware_msgs/ControlCommand.h>
 #include <autoware_msgs/Waypoint.h>
-#include <autoware_msgs/VehicleStatus.h>
 #include <visualization_msgs/MarkerArray.h>
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/DecisionMaker.h"
 #include "op_utility/DataRW.h"
 #include "op_ros_helpers/ROSMapHandler.h"
+#include "op_ros_helpers/ROSVelocityHandler.h"
 
 #define LOG_LOCAL_PLANNING_DATA
 
@@ -62,7 +57,6 @@ protected: //Planning Related variables
 	bool bNewCurrentPos;
 
 	PlannerHNS::VehicleState m_VehicleStatus;
-	bool bVehicleStatus;
 
 	std::vector<PlannerHNS::WayPoint> m_temp_path;
 	std::vector<std::vector<PlannerHNS::WayPoint> > m_GlobalPaths;
@@ -120,10 +114,6 @@ protected: //Planning Related variables
 
 	// define subscribers.
 	ros::Subscriber sub_current_pose;
-	ros::Subscriber sub_current_velocity;
-	ros::Subscriber sub_robot_odom;
-	ros::Subscriber sub_can_info;
-	ros::Subscriber sub_vehicle_status;
 	ros::Subscriber sub_GlobalPlannerPaths;
 	ros::Subscriber sub_LocalPlannerPaths;
 	ros::Subscriber sub_Trajectory_Cost;
@@ -140,10 +130,6 @@ protected: //Planning Related variables
 	void callbackGetTwistCMD(const geometry_msgs::TwistStampedConstPtr& msg);
 	void callbackGetCommandCMD(const autoware_msgs::ControlCommandConstPtr& msg);
 	void callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
-	void callbackGetAutowareStatus(const geometry_msgs::TwistStampedConstPtr& msg);
-	void callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg);
-	void callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg);
-	void callbackGetVehicleStatus(const autoware_msgs::VehicleStatusConstPtr & msg);
 	//----------------------------
 
 	//Path Planning Section
@@ -173,8 +159,8 @@ public:
   ~BehaviorGen();
   void MainLoop();
 
-  //Mapping Section
   PlannerHNS::MapHandler m_MapHandler;
+  PlannerHNS::VelocityHandler m_VelHandler;
 };
 
 }

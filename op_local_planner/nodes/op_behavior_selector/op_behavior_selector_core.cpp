@@ -28,7 +28,6 @@ BehaviorGen::BehaviorGen()
 {
 	m_ControlFrequency = 50;
 	bNewCurrentPos = false;
-	bVehicleStatus = false;
 	bNewLightStatus = false;
 	bNewLightSignal = false;
 	bBestCost = false;
@@ -80,26 +79,7 @@ BehaviorGen::BehaviorGen()
 	sub_twist_raw = nh.subscribe("/twist_raw", 1, &BehaviorGen::callbackGetTwistRaw, this);
 	sub_twist_cmd = nh.subscribe("/twist_cmd", 1, &BehaviorGen::callbackGetTwistCMD, this);
 	//sub_ctrl_cmd = nh.subscribe("/ctrl_cmd", 1, &BehaviorGen::callbackGetCommandCMD, this);
-	int bVelSource = 1;
-	_nh.getParam("/op_common_params/velocitySource", bVelSource);
-	std::string velocity_topic;
-	if(bVelSource == 0)
-	{
-		sub_robot_odom = nh.subscribe("/odometry", 1, &BehaviorGen::callbackGetRobotOdom, this);
-	}
-	else if(bVelSource == 1)
-	{
-		sub_current_velocity = nh.subscribe("/current_velocity", 1, &BehaviorGen::callbackGetAutowareStatus, this);
-	}
-	else if(bVelSource == 2)
-	{
-		sub_can_info = nh.subscribe("/can_info", 1, &BehaviorGen::callbackGetCANInfo, this);
-	}
-	else if(bVelSource == 3)
-	{
-		_nh.getParam("/op_common_params/vehicle_status_topic", velocity_topic);
-		sub_vehicle_status = _nh.subscribe(velocity_topic, 1, &BehaviorGen::callbackGetVehicleStatus, this);
-	}
+	m_VelHandler.InitVelocityHandler(nh, m_CarInfo, &m_VehicleStatus, &m_CurrentPos);
 	//----------------------------
 
 	//Mapping Section
@@ -230,50 +210,6 @@ void BehaviorGen::callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPt
 {
 	m_CurrentPos.pos = PlannerHNS::GPSPoint(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z, tf::getYaw(msg->pose.orientation));
 	bNewCurrentPos = true;
-}
-
-void BehaviorGen::callbackGetAutowareStatus(const geometry_msgs::TwistStampedConstPtr& msg)
-{
-	m_VehicleStatus.speed = msg->twist.linear.x;
-	m_CurrentPos.v = m_VehicleStatus.speed;
-
-	if(fabs(m_CurrentPos.v) > 0.1)
-	{
-		m_VehicleStatus.steer = atan(m_CarInfo.wheel_base * msg->twist.angular.z/m_CurrentPos.v);
-	}
-	UtilityHNS::UtilityH::GetTickCount(m_VehicleStatus.tStamp);
-	bVehicleStatus = true;
-}
-
-void BehaviorGen::callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg)
-{
-	m_VehicleStatus.speed = msg->speed/3.6;
-	m_CurrentPos.v = m_VehicleStatus.speed;
-	m_VehicleStatus.steer = msg->angle * m_CarInfo.max_wheel_angle / m_CarInfo.max_steer_value;
-	UtilityHNS::UtilityH::GetTickCount(m_VehicleStatus.tStamp);
-	bVehicleStatus = true;
-}
-
-void BehaviorGen::callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg)
-{
-	m_VehicleStatus.speed = msg->twist.twist.linear.x;
-	m_CurrentPos.v = m_VehicleStatus.speed ;
-	if(msg->twist.twist.linear.x != 0)
-	{
-		m_VehicleStatus.steer += atan(m_CarInfo.wheel_base * msg->twist.twist.angular.z/msg->twist.twist.linear.x);
-	}
-	UtilityHNS::UtilityH::GetTickCount(m_VehicleStatus.tStamp);
-	bVehicleStatus = true;
-}
-
-void BehaviorGen::callbackGetVehicleStatus(const autoware_msgs::VehicleStatusConstPtr & msg)
-{
-	m_VehicleStatus.speed = msg->speed/3.6;
-	m_VehicleStatus.steer = -msg->angle*DEG2RAD;
-	m_CurrentPos.v = m_VehicleStatus.speed;
-	UtilityHNS::UtilityH::GetTickCount(m_VehicleStatus.tStamp);
-	bVehicleStatus = true;
-//	std::cout << "Vehicle Real Status, Speed: " << m_VehicleStatus.speed << ", Steer Angle: " << m_VehicleStatus.steer << ", Steermode: " << msg->steeringmode << ", Org angle: " << msg->angle <<  std::endl;
 }
 
 //----------------------------

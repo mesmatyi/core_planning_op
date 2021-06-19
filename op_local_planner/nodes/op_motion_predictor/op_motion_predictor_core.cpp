@@ -24,7 +24,6 @@ namespace MotionPredictorNS
 MotionPrediction::MotionPrediction()
 {
 	bNewCurrentPos = false;
-	bVehicleStatus = false;
 	bTrackedObjects = false;
 	m_bEnableCurbObstacles = false;
 	m_DistanceBetweenCurbs = 1.0;
@@ -53,26 +52,7 @@ MotionPrediction::MotionPrediction()
 	sub_tracked_objects	= nh.subscribe(m_TrackedObjectsTopicName, 	1,	&MotionPrediction::callbackGetTrackedObjects, 		this);
 	sub_current_pose 	= nh.subscribe("/current_pose", 1,	&MotionPrediction::callbackGetCurrentPose, 		this);
 
-	int bVelSource = 1;
-	_nh.getParam("/op_common_params/velocitySource", bVelSource);
-	std::string velocity_topic;
-	if(bVelSource == 0)
-	{
-		sub_robot_odom = nh.subscribe("/odometry", 1, &MotionPrediction::callbackGetRobotOdom, this);
-	}
-	else if(bVelSource == 1)
-	{
-		sub_current_velocity = nh.subscribe("/current_velocity", 1, &MotionPrediction::callbackGetAutowareStatus, this);
-	}
-	else if(bVelSource == 2)
-	{
-		sub_can_info = nh.subscribe("/can_info", 1, &MotionPrediction::callbackGetCANInfo, this);
-	}
-	else if(bVelSource == 3)
-	{
-		nh.getParam("/op_common_params/vehicle_status_topic", velocity_topic);
-		sub_vehicle_status = nh.subscribe(velocity_topic, 1, &MotionPrediction::callbackGetVehicleStatus, this);
-	}
+	m_VelHandler.InitVelocityHandler(nh, m_CarInfo, &m_VehicleStatus, &m_CurrentPos);
 
 	UtilityHNS::UtilityH::GetTickCount(m_VisualizationTimer);
 	PlannerHNS::ROSHelpers::InitPredMarkers(500, m_PredictedTrajectoriesDummy);
@@ -193,42 +173,6 @@ void MotionPrediction::callbackGetCurrentPose(const geometry_msgs::PoseStampedCo
 {
 	m_CurrentPos.pos = PlannerHNS::GPSPoint(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z, tf::getYaw(msg->pose.orientation));
 	bNewCurrentPos = true;
-}
-
-void MotionPrediction::callbackGetAutowareStatus(const geometry_msgs::TwistStampedConstPtr& msg)
-{
-	m_VehicleStatus.speed = msg->twist.linear.x;
-	m_CurrentPos.v = m_VehicleStatus.speed;
-	if(fabs(msg->twist.linear.x) > 0.25)
-		m_VehicleStatus.steer = atan(m_CarInfo.wheel_base * msg->twist.angular.z/msg->twist.linear.x);
-	UtilityHNS::UtilityH::GetTickCount(m_VehicleStatus.tStamp);
-	bVehicleStatus = true;
-}
-
-void MotionPrediction::callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg)
-{
-	m_VehicleStatus.speed = msg->speed/3.6;
-	m_VehicleStatus.steer = msg->angle * m_CarInfo.max_wheel_angle / m_CarInfo.max_steer_value;
-	UtilityHNS::UtilityH::GetTickCount(m_VehicleStatus.tStamp);
-	bVehicleStatus = true;
-}
-
-void MotionPrediction::callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg)
-{
-	m_VehicleStatus.speed = msg->twist.twist.linear.x;
-	if(msg->twist.twist.linear.x != 0)
-		m_VehicleStatus.steer += atan(m_CarInfo.wheel_base * msg->twist.twist.angular.z/msg->twist.twist.linear.x);
-	UtilityHNS::UtilityH::GetTickCount(m_VehicleStatus.tStamp);
-	bVehicleStatus = true;
-}
-
-void MotionPrediction::callbackGetVehicleStatus(const autoware_msgs::VehicleStatusConstPtr & msg)
-{
-	m_VehicleStatus.speed = msg->speed/3.6;
-	m_VehicleStatus.steer = -msg->angle*DEG2RAD;
-	m_CurrentPos.v = m_VehicleStatus.speed;
-	bVehicleStatus = true;
-//	std::cout << "Vehicle Real Status, Speed: " << m_VehicleStatus.speed << ", Steer Angle: " << m_VehicleStatus.steer << ", Steermode: " << msg->steeringmode << ", Org angle: " << msg->angle <<  std::endl;
 }
 
 void MotionPrediction::callbackGetTrackedObjects(const autoware_msgs::DetectedObjectArrayConstPtr& msg)

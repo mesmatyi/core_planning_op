@@ -26,25 +26,21 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
-#include <nav_msgs/Odometry.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <autoware_msgs/State.h>
-#include <autoware_msgs/VehicleStatus.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_listener.h>
 #include <tf/tf.h>
 
 #include <std_msgs/Int8.h>
-#include "autoware_can_msgs/CANInfo.h"
 #include <visualization_msgs/MarkerArray.h>
-#include <autoware_lanelet2_msgs/MapBin.h>
 
 #include "op_planner/hmi/HMIMSG.h"
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/MappingHelpers.h"
 #include "op_planner/PlannerH.h"
-#include "op_utility/DataRW.h"
 #include "op_ros_helpers/ROSMapHandler.h"
+#include "op_ros_helpers/ROSVelocityHandler.h"
 
 
 namespace GlobalPlanningNS
@@ -56,7 +52,6 @@ namespace GlobalPlanningNS
 class GlobalPlanningParams
 {
 public:
-//	std::string mapPath; //path to map file or folder, depending on the mapSource parameter
 	std::string exprimentName; //folder name that will contains generated global path logs, when new global path is generated a .csv file will be written.
 	std::string destinationsFile; //file path of the list of destinations for the global path to achieve.
 	bool bEnableSmoothing; //additional smoothing step to the generated global path, of the waypoints are far apart, this could lead to corners cutting.
@@ -115,6 +110,7 @@ protected:
 	int m_ClearCostTime; // in seconds
 
 	PlannerHNS::WayPoint m_PreviousPlanningPose;
+	PlannerHNS::VelocityHandler m_VelHandler;
 
 	ros::NodeHandle nh;
 
@@ -125,14 +121,10 @@ protected:
 	ros::Publisher pub_hmi_mission;
 
 	ros::Subscriber sub_replan_signal;
-	ros::Subscriber sub_robot_odom;
-	ros::Subscriber sub_vehicle_status;
 	ros::Subscriber sub_start_pose;
 	ros::Subscriber sub_goal_pose;
 	ros::Subscriber sub_current_pose;
-	ros::Subscriber sub_current_velocity;
-	ros::Subscriber sub_can_info;
-	ros::Subscriber sub_road_status_occupancy;
+//	ros::Subscriber sub_road_status_occupancy;
 	ros::Subscriber sub_hmi_mission;
 	ros::Subscriber sub_v2x_obstacles;
 
@@ -148,10 +140,6 @@ private:
   void callbackGetGoalPose(const geometry_msgs::PoseStampedConstPtr &msg);
   void callbackGetStartPose(const geometry_msgs::PoseWithCovarianceStampedConstPtr &input);
   void callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
-  void callbackGetAutowareStatus(const geometry_msgs::TwistStampedConstPtr& msg);
-  void callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg);
-  void callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg);
-  void callbackGetVehicleStatus(const autoware_msgs::VehicleStatusConstPtr & msg);
   void callbackGetReplanSignal(const std_msgs::BoolConstPtr& msg);
   void callbackGetV2XReplanSignal(const geometry_msgs::PoseArrayConstPtr& msg);
   /**

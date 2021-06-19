@@ -92,26 +92,28 @@ GlobalPlanner::GlobalPlanner()
 	sub_replan_signal = nh.subscribe("/op_global_replan", 1, &GlobalPlanner::callbackGetReplanSignal, this);
 	sub_current_pose = nh.subscribe("/current_pose", 1, &GlobalPlanner::callbackGetCurrentPose, this);
 
-	int bVelSource = 1;
-	nh.getParam("/op_global_planner/velocitySource", bVelSource);
-	if(bVelSource == 0)
-	{
-		sub_robot_odom = nh.subscribe("/odom", 1, &GlobalPlanner::callbackGetRobotOdom, this);
-	}
-	else if(bVelSource == 1)
-	{
-		sub_current_velocity = nh.subscribe("/current_velocity", 1, &GlobalPlanner::callbackGetAutowareStatus, this);
-	}
-	else if(bVelSource == 2)
-	{
-		sub_can_info = nh.subscribe("/can_info", 1, &GlobalPlanner::callbackGetCANInfo, this);
-	}
-	else if(bVelSource == 3)
-	{
-		std::string velocity_topic;
-		nh.getParam("/vehicle_status_topic", velocity_topic);
-		sub_vehicle_status = nh.subscribe(velocity_topic, 1, &GlobalPlanner::callbackGetVehicleStatus, this);
-	}
+	m_VelHandler.InitVelocityHandler(nh, PlannerHNS::CAR_BASIC_INFO(), &m_VehicleState, &m_CurrentPose);
+
+//	int bVelSource = 1;
+//	nh.getParam("/op_global_planner/velocitySource", bVelSource);
+//	if(bVelSource == 0)
+//	{
+//		sub_robot_odom = nh.subscribe("/odom", 1, &GlobalPlanner::callbackGetRobotOdom, this);
+//	}
+//	else if(bVelSource == 1)
+//	{
+//		sub_current_velocity = nh.subscribe("/current_velocity", 1, &GlobalPlanner::callbackGetAutowareStatus, this);
+//	}
+//	else if(bVelSource == 2)
+//	{
+//		sub_can_info = nh.subscribe("/can_info", 1, &GlobalPlanner::callbackGetCANInfo, this);
+//	}
+//	else if(bVelSource == 3)
+//	{
+//		std::string velocity_topic;
+//		nh.getParam("/vehicle_status_topic", velocity_topic);
+//		sub_vehicle_status = nh.subscribe(velocity_topic, 1, &GlobalPlanner::callbackGetVehicleStatus, this);
+//	}
 
 	m_MapHandler.InitMapHandler(nh, "/op_global_planner/mapSource",
 			"/op_global_planner/mapFileName", "/op_global_planner/lanelet2_origin");
@@ -303,40 +305,6 @@ void GlobalPlanner::callbackGetCurrentPose(const geometry_msgs::PoseStampedConst
 {
 	m_CurrentPose.pos = PlannerHNS::GPSPoint(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z, tf::getYaw(msg->pose.orientation));
 	m_bStart = true;
-}
-
-void GlobalPlanner::callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg)
-{
-	m_VehicleState.speed = msg->twist.twist.linear.x;
-	m_CurrentPose.v = m_VehicleState.speed;
-	if(fabs(msg->twist.twist.linear.x) > 0.25)
-		m_VehicleState.steer += atan(2.7 * msg->twist.twist.angular.z/msg->twist.twist.linear.x);
-}
-
-void GlobalPlanner::callbackGetAutowareStatus(const geometry_msgs::TwistStampedConstPtr& msg)
-{
-	m_VehicleState.speed = msg->twist.linear.x;
-	m_CurrentPose.v = m_VehicleState.speed;
-	if(fabs(msg->twist.linear.x) > 0.25)
-		m_VehicleState.steer = atan(2.7 * msg->twist.angular.z/msg->twist.linear.x);
-	UtilityHNS::UtilityH::GetTickCount(m_VehicleState.tStamp);
-}
-
-void GlobalPlanner::callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg)
-{
-	m_VehicleState.speed = msg->speed/3.6;
-	m_CurrentPose.v = m_VehicleState.speed;
-	m_VehicleState.steer = msg->angle * 0.45 / 660;
-	UtilityHNS::UtilityH::GetTickCount(m_VehicleState.tStamp);
-}
-
-void GlobalPlanner::callbackGetVehicleStatus(const autoware_msgs::VehicleStatusConstPtr & msg)
-{
-	m_VehicleState.speed = msg->speed/3.6;
-	m_VehicleState.steer = -msg->angle*DEG2RAD;
-	m_CurrentPose.v = m_VehicleState.speed;
-
-//	std::cout << "Vehicle Real Status, Speed: " << m_VehicleStatus.speed << ", Steer Angle: " << m_VehicleStatus.steer << ", Steermode: " << msg->steeringmode << ", Org angle: " << msg->angle <<  std::endl;
 }
 
 bool GlobalPlanner::GenerateGlobalPlan(PlannerHNS::WayPoint& startPoint, PlannerHNS::WayPoint& goalPoint, std::vector<std::vector<PlannerHNS::WayPoint> >& generatedTotalPaths)
