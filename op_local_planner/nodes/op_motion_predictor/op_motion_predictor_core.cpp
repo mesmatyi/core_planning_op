@@ -80,7 +80,8 @@ MotionPrediction::MotionPrediction()
 	PlannerHNS::ROSHelpers::InitPredParticlesMarkers(1000, m_PredictedParticlesDummy);
 	PlannerHNS::ROSHelpers::InitPredParticlesMarkers(2000, m_GeneratedParticlesDummy, true);
 
-	m_MapHandler.SubscribeToMapMsgs(nh);
+	m_MapHandler.InitMapHandler(nh, "/op_common_params/mapSource",
+			"/op_common_params/mapFileName", "/op_common_params/lanelet2_origin");
 
 	std::cout << "OpenPlanner Motion Predictor initialized successfully " << std::endl;
 }
@@ -137,14 +138,6 @@ void MotionPrediction::UpdatePlanningParams(ros::NodeHandle& _nh)
 	_nh.getParam("/op_common_params/maxDeceleration", m_CarInfo.max_deceleration);
 	m_CarInfo.max_speed_forward = m_PlanningParams.maxSpeed;
 	m_CarInfo.min_speed_forward = m_PlanningParams.minSpeed;
-
-	int iSource = 0;
-	_nh.getParam("/op_common_params/mapSource" , iSource);
-	std::string str_origin;
-	nh.getParam("/op_common_params/lanelet2_origin" , str_origin);
-	std::string str_map_path;
-	_nh.getParam("/op_common_params/mapFileName" , str_map_path);
-	m_MapHandler.UpdateMapTypeParams(iSource, str_map_path, str_origin);
 
 	_nh.getParam("/op_common_params/objects_input_topic" , m_TrackedObjectsTopicName);
 	_nh.getParam("/op_common_params/experimentName" , m_ExperimentFolderName);

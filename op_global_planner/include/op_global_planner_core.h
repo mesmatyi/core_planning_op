@@ -56,7 +56,7 @@ namespace GlobalPlanningNS
 class GlobalPlanningParams
 {
 public:
-	std::string mapPath; //path to map file or folder, depending on the mapSource parameter
+//	std::string mapPath; //path to map file or folder, depending on the mapSource parameter
 	std::string exprimentName; //folder name that will contains generated global path logs, when new global path is generated a .csv file will be written.
 	std::string destinationsFile; //file path of the list of destinations for the global path to achieve.
 	bool bEnableSmoothing; //additional smoothing step to the generated global path, of the waypoints are far apart, this could lead to corners cutting.

@@ -103,7 +103,8 @@ BehaviorGen::BehaviorGen()
 	//----------------------------
 
 	//Mapping Section
-	m_MapHandler.SubscribeToMapMsgs(nh);
+	m_MapHandler.InitMapHandler(nh, "/op_common_params/mapSource",
+			"/op_common_params/mapFileName", "/op_common_params/lanelet2_origin");
 }
 
 BehaviorGen::~BehaviorGen()
@@ -185,19 +186,8 @@ void BehaviorGen::UpdatePlanningParams(ros::NodeHandle& _nh)
 	nh.getParam("/op_common_params/goalDiscoveryDistance", m_PlanningParams.goalDiscoveryDistance);
 	nh.getParam("/op_common_params/giveUpDistance", m_PlanningParams.giveUpDistance );
 
-	int iSource = 0;
-	_nh.getParam("/op_common_params/mapSource" , iSource);
-	std::string str_origin;
-	nh.getParam("/op_common_params/lanelet2_origin" , str_origin);
-	std::string str_map_path;
-	_nh.getParam("/op_common_params/mapFileName" , str_map_path);
-
-	m_MapHandler.UpdateMapTypeParams(iSource, str_map_path, str_origin);
-
 	_nh.getParam("/op_behavior_selector/evidence_trust_number", m_PlanningParams.nReliableCount);
 	_nh.getParam("/op_behavior_selector/show_driving_path", m_bShowActualDrivingPath);
-
-
 
 	_nh.getParam("/op_common_params/experimentName" , m_ExperimentFolderName);
 	if(m_ExperimentFolderName.size() > 0)

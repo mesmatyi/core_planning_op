@@ -63,13 +63,6 @@ GlobalPlanner::GlobalPlanner()
 
 	nh.getParam("/op_global_planner/goalConfirmDistance" , m_params.endOfPathDistance);
 	nh.getParam("/op_global_planner/enableReplan" , m_params.bEnableReplanning);
-	nh.getParam("/op_global_planner/mapFileName" , m_params.mapPath);
-
-	int iSource = 0;
-	nh.getParam("/op_global_planner/mapSource", iSource);
-	std::string str_origin;
-	nh.getParam("/op_global_planner/lanelet2_origin" , str_origin);
-	m_MapHandler.UpdateMapTypeParams(iSource, m_params.mapPath, str_origin);
 
 	pub_Paths = nh.advertise<autoware_msgs::LaneArray>("lane_waypoints_array", 1, true);
 	pub_PathsRviz = nh.advertise<visualization_msgs::MarkerArray>("global_waypoints_rviz", 1, true);
@@ -120,7 +113,8 @@ GlobalPlanner::GlobalPlanner()
 		sub_vehicle_status = nh.subscribe(velocity_topic, 1, &GlobalPlanner::callbackGetVehicleStatus, this);
 	}
 
-	m_MapHandler.SubscribeToMapMsgs(nh);
+	m_MapHandler.InitMapHandler(nh, "/op_global_planner/mapSource",
+			"/op_global_planner/mapFileName", "/op_global_planner/lanelet2_origin");
 
 	tf::StampedTransform transform;
 	tf::TransformListener tf_listener;

@@ -139,7 +139,8 @@ OpenPlannerCarSimulator::OpenPlannerCarSimulator()
 	base_frame_id << "base_link_" << m_SimParams.id;
 	m_BaseLinkFrameID = base_frame_id.str();
 
-	m_MapHandler.SubscribeToMapMsgs(nh);
+	m_MapHandler.InitMapHandler(nh, "/mapSource",
+					"/mapFileName", "/lanelet2_origin");
 
 	UtilityHNS::UtilityH::GetTickCount(m_PlanningTimer);
 	std::cout << "OpenPlannerCarSimulator initialized successfully " << std::endl;
@@ -217,16 +218,9 @@ void OpenPlannerCarSimulator::ReadParamFromLaunchFile(PlannerHNS::CAR_BASIC_INFO
 	_nh.getParam("enableUsingJoyStick", bUseWheelController );
 
 	//_nh.getParam("enableCurbObstacles", m_bEnableCurbObstacles);
-	int iSource = 0;
-	_nh.getParam("mapSource" , iSource);
-	std::string str_map_path;
-	_nh.getParam("mapFileName" , str_map_path);
-	std::string str_origin;
-	nh.getParam("/lanelet2_origin" , str_origin);
-	m_MapHandler.UpdateMapTypeParams(iSource, str_map_path, str_origin);
+
 	m_PlanningParams.additionalBrakingDistance = 5;
 	m_PlanningParams.stopSignStopTime = 10;
-
 
 	m_ControlParams.Steering_Gain = PlannerHNS::PID_CONST(0.07, 0.02, 0.01); // for 3 m/s
 	m_ControlParams.Velocity_Gain = PlannerHNS::PID_CONST(0.1, 0.005, 0.1);
