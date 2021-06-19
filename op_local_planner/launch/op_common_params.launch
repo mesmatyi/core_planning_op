@@ -59,7 +59,7 @@
 	<arg name="giveUpDistance" 				default="-1.0" />
 			
 	<arg name="velocitySource"				default="1" /> <!-- read velocities from (0- Odometry, 1- autoware current_velocities, 2- car_info, 3- vehicle status ) "" -->
-	<arg name="vel_odom_topic"				default="/carla/ego_vehicle/odometry" />
+	<arg name="vel_odom_topic"				default="/odometry" />
 	<arg name="vel_curr_topic"				default="/current_velocity" />
 	<arg name="vel_can_topic"				default="/can_info" />
 	<arg name="vehicle_status_topic"		default="/vehicle_status" />

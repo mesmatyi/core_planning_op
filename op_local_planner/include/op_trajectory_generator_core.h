@@ -41,8 +41,6 @@ protected:
 	geometry_msgs::Pose m_OriginPos;
 	PlannerHNS::WayPoint m_InitPos;
 	bool bInitPos;
-	bool bEnableSmoothGlobalPathForCARLA;
-	bool bEnableVisualizeGlobalPathForCARLA;
 
 	PlannerHNS::WayPoint m_CurrentPos;
 	bool bNewCurrentPos;
@@ -79,7 +77,6 @@ protected:
 	ros::NodeHandle nh;
 
 	//define publishers
-	ros::Publisher pub_PathsRviz;
 	ros::Publisher pub_LocalTrajectories;
 	ros::Publisher pub_LocalTrajectoriesRviz;
 

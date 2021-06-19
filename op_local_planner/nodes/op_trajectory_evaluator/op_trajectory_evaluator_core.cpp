@@ -27,7 +27,6 @@ TrajectoryEvalCore::TrajectoryEvalCore()
 	bNewCurrentPos = false;
 	bVehicleStatus = false;
 	m_bUseMoveingObjectsPrediction = false;
-	bEnableSmoothGlobalPathForCARLA = false;
 	m_bKeepCurrentIfPossible = false;
 	m_AdditionalFollowDistance = 10; // meters
 
@@ -54,7 +53,7 @@ TrajectoryEvalCore::TrajectoryEvalCore()
 	std::string velocity_topic;
 	if(bVelSource == 0)
 	{
-		sub_robot_odom = nh.subscribe("/carla/ego_vehicle/odometry", 1, &TrajectoryEvalCore::callbackGetRobotOdom, this);
+		sub_robot_odom = nh.subscribe("/odometry", 1, &TrajectoryEvalCore::callbackGetRobotOdom, this);
 	}
 	else if(bVelSource == 1)
 	{
@@ -264,24 +263,9 @@ void TrajectoryEvalCore::callbackGetGlobalPlannerPath(const autoware_msgs::LaneA
 
 		if(!bOldGlobalPath)
 		{
-			if(bEnableSmoothGlobalPathForCARLA)
+			for(unsigned int i = 0; i < m_GlobalPaths.size(); i++)
 			{
-				for(unsigned int i = 0; i < m_GlobalPaths.size(); i++)
-				{
-					PlannerHNS::PlanningHelpers::FixPathDensity(m_GlobalPaths.at(i), m_PlanningParams.pathDensity);
-					PlannerHNS::PlanningHelpers::CalcAngleAndCost(m_GlobalPaths.at(i));
-					PlannerHNS::PlanningHelpers::SmoothPath(m_GlobalPaths.at(i), 0.48, 0.2, 0.05); // this line could slow things , if new global path is generated frequently. only for carla
-					PlannerHNS::PlanningHelpers::SmoothPath(m_GlobalPaths.at(i), 0.48, 0.2, 0.05); // this line could slow things , if new global path is generated frequently. only for carla
-					PlannerHNS::PlanningHelpers::SmoothPath(m_GlobalPaths.at(i), 0.48, 0.2, 0.05); // this line could slow things , if new global path is generated frequently. only for carla
-					PlannerHNS::PlanningHelpers::CalcAngleAndCost(m_GlobalPaths.at(i));
-				}
-			}
-			else
-			{
-				for(unsigned int i = 0; i < m_GlobalPaths.size(); i++)
-				{
-					PlannerHNS::PlanningHelpers::CalcAngleAndCost(m_GlobalPaths.at(i));
-				}
+				PlannerHNS::PlanningHelpers::CalcAngleAndCost(m_GlobalPaths.at(i));
 			}
 			std::cout << "Received New Global Paths Evaluator ! " << m_GlobalPaths.size() << std::endl;
 		}

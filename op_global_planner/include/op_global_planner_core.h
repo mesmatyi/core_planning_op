@@ -134,7 +134,6 @@ protected:
 	ros::Subscriber sub_can_info;
 	ros::Subscriber sub_road_status_occupancy;
 	ros::Subscriber sub_hmi_mission;
-//	ros::Subscriber sub_map_file_name;
 	ros::Subscriber sub_v2x_obstacles;
 
 public:

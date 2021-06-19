@@ -19,17 +19,6 @@
 
 #include <ros/ros.h>
 
-#include "vector_map_msgs/PointArray.h"
-#include "vector_map_msgs/LaneArray.h"
-#include "vector_map_msgs/NodeArray.h"
-#include "vector_map_msgs/StopLineArray.h"
-#include "vector_map_msgs/DTLaneArray.h"
-#include "vector_map_msgs/LineArray.h"
-#include "vector_map_msgs/AreaArray.h"
-#include "vector_map_msgs/SignalArray.h"
-#include "vector_map_msgs/StopLine.h"
-#include "vector_map_msgs/VectorArray.h"
-
 #include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
@@ -50,10 +39,10 @@
 #include <autoware_msgs/Waypoint.h>
 #include <autoware_msgs/VehicleStatus.h>
 #include <visualization_msgs/MarkerArray.h>
-#include <autoware_lanelet2_msgs/MapBin.h>
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/DecisionMaker.h"
 #include "op_utility/DataRW.h"
+#include "op_ros_helpers/ROSMapHandler.h"
 
 #define LOG_LOCAL_PLANNING_DATA
 
@@ -80,11 +69,7 @@ protected: //Planning Related variables
 	std::vector<std::vector<PlannerHNS::WayPoint> > m_GlobalPathsToUse;
 	std::vector<std::vector<std::vector<PlannerHNS::WayPoint> > > m_LanesRollOutsToUse;
 
-	PlannerHNS::MAP_SOURCE_TYPE m_MapType;
-	std::string m_MapPath;
-
 	PlannerHNS::RoadNetwork m_Map;
-	bool bMap;
 
 	PlannerHNS::TrajectoryCost m_TrajectoryBestCost;
 	bool bBestCost;
@@ -188,42 +173,8 @@ public:
   ~BehaviorGen();
   void MainLoop();
 
-	//Mapping Section
-  //----------------------------
-	UtilityHNS::MapRaw m_MapRaw;
-	ros::Subscriber sub_bin_map;
-	ros::Subscriber sub_lanes;
-	ros::Subscriber sub_points;
-	ros::Subscriber sub_dt_lanes;
-	ros::Subscriber sub_intersect;
-	ros::Subscriber sup_area;
-	ros::Subscriber sub_lines;
-	ros::Subscriber sub_stop_line;
-	ros::Subscriber sub_signals;
-	ros::Subscriber sub_vectors;
-	ros::Subscriber sub_curbs;
-	ros::Subscriber sub_edges;
-	ros::Subscriber sub_way_areas;
-	ros::Subscriber sub_cross_walk;
-	ros::Subscriber sub_nodes;
-
-
-	void callbackGetLanelet2(const autoware_lanelet2_msgs::MapBin& msg);
-	void callbackGetVMLanes(const vector_map_msgs::LaneArray& msg);
-	void callbackGetVMPoints(const vector_map_msgs::PointArray& msg);
-	void callbackGetVMdtLanes(const vector_map_msgs::DTLaneArray& msg);
-	void callbackGetVMIntersections(const vector_map_msgs::CrossRoadArray& msg);
-	void callbackGetVMAreas(const vector_map_msgs::AreaArray& msg);
-	void callbackGetVMLines(const vector_map_msgs::LineArray& msg);
-	void callbackGetVMStopLines(const vector_map_msgs::StopLineArray& msg);
-	void callbackGetVMSignal(const vector_map_msgs::SignalArray& msg);
-	void callbackGetVMVectors(const vector_map_msgs::VectorArray& msg);
-	void callbackGetVMCurbs(const vector_map_msgs::CurbArray& msg);
-	void callbackGetVMRoadEdges(const vector_map_msgs::RoadEdgeArray& msg);
-	void callbackGetVMWayAreas(const vector_map_msgs::WayAreaArray& msg);
-	void callbackGetVMCrossWalks(const vector_map_msgs::CrossWalkArray& msg);
-	void callbackGetVMNodes(const vector_map_msgs::NodeArray& msg);
-	//----------------------------
+  //Mapping Section
+  PlannerHNS::MapHandler m_MapHandler;
 };
 
 }

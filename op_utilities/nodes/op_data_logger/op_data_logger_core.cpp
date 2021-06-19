@@ -49,7 +49,7 @@ OpenPlannerDataLogger::OpenPlannerDataLogger()
 	int bVelSource = 1;
 	_nh.getParam("/op_common_params/velocitySource", bVelSource);
 	if(bVelSource == 0)
-		sub_robot_odom = nh.subscribe("/carla/ego_vehicle/odometry", 1, &OpenPlannerDataLogger::callbackGetRobotOdom, this);
+		sub_robot_odom = nh.subscribe("/odometry", 1, &OpenPlannerDataLogger::callbackGetRobotOdom, this);
 	else if(bVelSource == 1)
 		sub_current_velocity = nh.subscribe("/current_velocity", 1, &OpenPlannerDataLogger::callbackGetVehicleStatus, this);
 	else if(bVelSource == 2)
