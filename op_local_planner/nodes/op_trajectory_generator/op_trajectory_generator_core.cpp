@@ -42,7 +42,8 @@ TrajectoryGen::TrajectoryGen()
 	m_OriginPos.position.y  = transform.getOrigin().y();
 	m_OriginPos.position.z  = transform.getOrigin().z();
 
-	pub_LocalTrajectories = nh.advertise<autoware_msgs::LaneArray>("local_trajectories", 1);
+	pub_PathsRviz = nh.advertise<visualization_msgs::MarkerArray>("global_waypoints_rviz", 1, true);
+	pub_LocalTrajectories = nh.advertise<autoware_msgs::LaneArrayStamped>("local_trajectories", 1);
 	pub_LocalTrajectoriesRviz = nh.advertise<visualization_msgs::MarkerArray>("local_trajectories_gen_rviz", 1);
 
 	sub_initialpose = nh.subscribe("/initialpose", 1, &TrajectoryGen::callbackGetInitPose, this);
@@ -340,7 +341,7 @@ void TrajectoryGen::MainLoop()
 				m_SmoothRollOuts = m_RollOuts;
 			}
 
-			autoware_msgs::LaneArray local_lanes;
+			autoware_msgs::LaneArrayStamped local_lanes;
 			for(unsigned int i=0; i < m_SmoothRollOuts.size(); i++)
 			{
 				for(unsigned int j=0; j < m_SmoothRollOuts.at(i).size(); j++)
@@ -356,6 +357,7 @@ void TrajectoryGen::MainLoop()
 					local_lanes.lanes.push_back(lane);
 				}
 			}
+                        local_lanes.header.stamp = ros::Time::now();
 			pub_LocalTrajectories.publish(local_lanes);
 		}
 		else
