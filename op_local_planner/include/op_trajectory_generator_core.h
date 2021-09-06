@@ -23,9 +23,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
 #include <autoware_msgs/LaneArray.h>
-#include <autoware_msgs/LaneArrayStamped.h>
-#include <autoware_msgs/VehicleStatus.h>
-#include <autoware_can_msgs/CANInfo.h>
+
 #include "op_planner/PlannerH.h"
 #include "op_planner/PlannerCommonDef.h"
 #include "op_ros_helpers/ROSVelocityHandler.h"
