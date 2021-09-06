@@ -18,23 +18,21 @@
 #define OP_TRAJECTORY_EVALUATOR_CORE
 
 #include <ros/ros.h>
-#include <geometry_msgs/TwistStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseArray.h>
-#include <nav_msgs/Odometry.h>
 #include <autoware_msgs/LaneArray.h>
 #include <autoware_msgs/LaneArrayStamped.h>
 #include <autoware_can_msgs/CANInfo.h>
 #include <autoware_msgs/DetectedObjectArray.h>
-#include <autoware_msgs/VehicleStatus.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Int32MultiArray.h>
 
 #include "op_planner/PlannerCommonDef.h"
 #include "op_planner/TrajectoryEvaluator.h"
+#include "op_ros_helpers/ROSVelocityHandler.h"
 
 namespace TrajectoryEvaluatorNS
 {
@@ -52,8 +50,9 @@ protected:
 	bool bNewCurrentPos;
 
 	PlannerHNS::VehicleState m_VehicleStatus;
-	bool bVehicleStatus;
 	bool m_bKeepCurrentIfPossible;
+
+	PlannerHNS::VelocityHandler m_VelHandler;
 
 	std::vector<PlannerHNS::WayPoint> m_temp_path;
 	std::vector<int> m_CurrGlobalPathsIds;
@@ -63,7 +62,6 @@ protected:
         ros::Time path_stamp;
 	std::vector<int> m_prev_index;
 	std::vector<PlannerHNS::WayPoint> t_centerTrajectorySmoothed;
-	bool bEnableSmoothGlobalPathForCARLA;
 	std::vector<std::vector<std::vector<PlannerHNS::WayPoint> > > m_LanesRollOutsToUse;
 
 	std::vector<PlannerHNS::DetectedObject> m_PredictedObjects;
@@ -100,10 +98,6 @@ protected:
 
 	// define subscribers.
 	ros::Subscriber sub_current_pose;
-	ros::Subscriber sub_current_velocity;
-	ros::Subscriber sub_robot_odom;
-	ros::Subscriber sub_can_info;
-	ros::Subscriber sub_vehicle_status;
 	ros::Subscriber sub_GlobalPlannerPaths;
 	ros::Subscriber sub_LocalPlannerPaths;
 	ros::Subscriber sub_predicted_objects;
@@ -112,10 +106,6 @@ protected:
 
 	// Callback function for subscriber.
 	void callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg);
-	void callbackGetAutowareStatus(const geometry_msgs::TwistStampedConstPtr& msg);
-	void callbackGetCANInfo(const autoware_can_msgs::CANInfoConstPtr &msg);
-	void callbackGetRobotOdom(const nav_msgs::OdometryConstPtr& msg);
-	void callbackGetVehicleStatus(const autoware_msgs::VehicleStatusConstPtr & msg);
 	void callbackGetGlobalPlannerPath(const autoware_msgs::LaneArrayConstPtr& msg);
 	void callbackGetLocalPlannerPath(const autoware_msgs::LaneArrayStampedConstPtr& msg);
 	void callbackGetPredictedObjects(const autoware_msgs::DetectedObjectArrayConstPtr& msg);
