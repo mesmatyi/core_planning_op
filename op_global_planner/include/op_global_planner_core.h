@@ -108,6 +108,7 @@ protected:
 	bool m_bReplanSignal;
 	std::vector<std::pair<std::vector<PlannerHNS::WayPoint*> , timespec> > m_ModifiedMapItemsTimes;
 	int m_ClearCostTime; // in seconds
+	std::string target_frame;
 
 	PlannerHNS::WayPoint m_PreviousPlanningPose;
 	PlannerHNS::VelocityHandler m_VelHandler;

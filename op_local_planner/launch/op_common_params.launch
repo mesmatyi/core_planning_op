@@ -1,9 +1,9 @@
 <!-- -->
 <launch>
 
-	<arg name="mapSource" 					default="0" /> <!-- Autoware=0, Vector Map Folder=1, kml=2, lanelet2 file=3, kml map file path from runtime manager = 4 -->
-	<arg name="mapFileName" 				default="" />
-	<arg name="lanelet2_origin"				default="0,0,0," /> <!-- GPS origin for lanelet2 map files, Lat, Long, Alt  -->
+	<arg name="mapSource" 					default="3" /> <!-- Autoware=0, Vector Map Folder=1, kml=2, lanelet2 file=3, kml map file path from runtime manager = 4 -->
+	<arg name="mapFileName" 				default="/home/matyko/lanelet2_maps/ZalaZone/ZalaZone_Uni_track_full_early_renamed.osm" />
+	<arg name="lanelet2_origin"				default="0,0,0" /> <!-- GPS origin for lanelet2 map files, Lat, Long, Alt  -->
 		
 	<arg name="pathDensity" 				default="0.5" />
 	<arg name="rollOutDensity" 				default="0.5" />
@@ -28,7 +28,7 @@
 	<arg name="enableFollowing" 			default="true" />	
 	<arg name="enableTrafficLightBehavior" 	default="false" />
 	<arg name="enableStopSignBehavior" 		default="false" />	
-	<arg name="enableLaneChange" 			default="false" />	
+	<arg name="enableLaneChange" 			default="true" />	
 	
 	<!-- Vehicle Info, shared with controller and simulation -->
 	<arg name="height" 						default="1.47"  />

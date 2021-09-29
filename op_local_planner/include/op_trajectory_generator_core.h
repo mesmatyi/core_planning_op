@@ -71,6 +71,8 @@ protected:
   	bool m_bEnableForwardSimulation;
   	PlannerHNS::VelocityHandler m_VelHandler;
 
+	std::string target_frame;
+
   	//ROS messages (topics)
 	ros::NodeHandle nh;
 

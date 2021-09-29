@@ -52,6 +52,8 @@ protected: //Planning Related variables
 	int m_ControlFrequency;
 	std::vector<double> dt_list;
 
+	std::string target_frame;
+
 	geometry_msgs::Pose m_OriginPos;
 	PlannerHNS::WayPoint m_CurrentPos;
 	bool bNewCurrentPos;

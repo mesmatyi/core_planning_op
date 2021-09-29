@@ -83,6 +83,8 @@ protected:
 	std::string m_ExperimentFolderName;
 	std::string m_EstimatedObjectsTopicName;
 
+	std::string target_frame;
+
 	//ROS messages (topics)
 	ros::NodeHandle nh;
 

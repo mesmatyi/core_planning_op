@@ -31,13 +31,16 @@ TrajectoryGen::TrajectoryGen()
 	m_SteeringDelay = 0;
 	m_MinPursuitDistance = 0;
 	m_bEnableForwardSimulation = false;
+	target_frame = "map_zala_0";
 
 	ros::NodeHandle _nh;
 	UpdatePlanningParams(_nh);
 
+	ros::param::get("op_viz_frame",target_frame);
+
 	tf::StampedTransform transform;
 	tf::TransformListener tf_listener;
-	PlannerHNS::ROSHelpers::getTransformFromTF("world", "map", tf_listener, transform);
+	PlannerHNS::ROSHelpers::getTransformFromTF(target_frame, "map", tf_listener, transform);
 	m_OriginPos.position.x  = transform.getOrigin().x();
 	m_OriginPos.position.y  = transform.getOrigin().y();
 	m_OriginPos.position.z  = transform.getOrigin().z();
@@ -362,7 +365,7 @@ void TrajectoryGen::MainLoop()
 			sub_GlobalPlannerPaths = nh.subscribe("/lane_waypoints_array", 	1,		&TrajectoryGen::callbackGetGlobalPlannerPath, 	this);
 
 		visualization_msgs::MarkerArray all_rollOuts;
-		PlannerHNS::ROSHelpers::TrajectoriesToMarkers(m_SmoothRollOuts, all_rollOuts);
+		PlannerHNS::ROSHelpers::TrajectoriesToMarkers(m_SmoothRollOuts, all_rollOuts,m_OriginPos.position.x,m_OriginPos.position.y,target_frame);
 		pub_LocalTrajectoriesRviz.publish(all_rollOuts);
 
 		loop_rate.sleep();

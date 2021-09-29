@@ -87,6 +87,8 @@ protected:
 	std::string m_ExperimentFolderName;
 	std::string m_TrackedObjectsTopicName;
 
+	std::string target_frame;
+
 	ros::NodeHandle nh;
 	ros::Publisher pub_predicted_objects_trajectories;
 	ros::Publisher pub_PredictedTrajectoriesRviz ;

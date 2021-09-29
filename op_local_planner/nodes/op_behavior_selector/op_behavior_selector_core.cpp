@@ -33,13 +33,16 @@ BehaviorGen::BehaviorGen()
 	bBestCost = false;
 	m_bRequestNewPlanSent = false;
 	m_bShowActualDrivingPath = false;
+	target_frame = "map_zala_0";
 
 	ros::NodeHandle _nh;
 	UpdatePlanningParams(_nh);
 
+	ros::param::get("op_viz_frame",target_frame);
+
 	tf::StampedTransform transform;
 	tf::TransformListener tf_listener;
-	PlannerHNS::ROSHelpers::getTransformFromTF("world", "map", tf_listener, transform);
+	PlannerHNS::ROSHelpers::getTransformFromTF(target_frame, "map", tf_listener, transform);
 	m_OriginPos.position.x  = transform.getOrigin().x();
 	m_OriginPos.position.y  = transform.getOrigin().y();
 	m_OriginPos.position.z  = transform.getOrigin().z();
@@ -520,7 +523,7 @@ void BehaviorGen::VisualizeLocalPlanner()
 		iDirection = 1;
 	else if(m_BehaviorGenerator.m_pCurrentBehaviorState->GetCalcParams()->iCurrSafeTrajectory < m_BehaviorGenerator.m_pCurrentBehaviorState->GetCalcParams()->iCentralTrajectory)
 		iDirection = -1;
-	PlannerHNS::ROSHelpers::VisualizeBehaviorState(m_CurrentPos, m_CurrentBehavior, !m_BehaviorGenerator.m_pCurrentBehaviorState->GetCalcParams()->bTrafficIsRed , iDirection, behavior_rviz, "beh_state");
+	PlannerHNS::ROSHelpers::VisualizeBehaviorState(m_CurrentPos, m_CurrentBehavior, !m_BehaviorGenerator.m_pCurrentBehaviorState->GetCalcParams()->bTrafficIsRed , iDirection, behavior_rviz, "beh_state",target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 	//pub_BehaviorStateRviz.publish(behavior_rviz);
 
 	visualization_msgs::MarkerArray markerArray;
@@ -539,7 +542,7 @@ void BehaviorGen::VisualizeLocalPlanner()
 
 	visualization_msgs::MarkerArray selected_path;
 	std::vector<PlannerHNS::WayPoint> path = m_BehaviorGenerator.m_Path;
-	PlannerHNS::ROSHelpers::TrajectorySelectedToMarkers(path, 1,0,1, 1,0,1, m_CarInfo.width/2.0+m_PlanningParams.horizontalSafetyDistancel, selected_path);
+	PlannerHNS::ROSHelpers::TrajectorySelectedToMarkers(path, 1,0,1, 1,0,1, m_CarInfo.width/2.0+m_PlanningParams.horizontalSafetyDistancel, selected_path,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 	//PlannerHNS::ROSHelpers::TrajectorySelectedToCircles(path, 1,0,1, 1,0,1, m_CarInfo.width/2.0+m_PlanningParams.horizontalSafetyDistancel, selected_path, 2);
 	pub_SelectedPathRviz.publish(selected_path);
 
@@ -708,7 +711,7 @@ void BehaviorGen::InsertNewActualPathPair(const double& min_record_distance)
 	if(m_ActualDrivingPath.size() > 1)
 	{
 		visualization_msgs::MarkerArray driving_path;
-		PlannerHNS::ROSHelpers::DrivingPathToMarkers(m_ActualDrivingPath, driving_path);
+		PlannerHNS::ROSHelpers::DrivingPathToMarkers(m_ActualDrivingPath, driving_path,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 		pub_CurrDrivingPathRviz.publish(driving_path);
 	}
 }

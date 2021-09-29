@@ -29,13 +29,16 @@ MotionPrediction::MotionPrediction()
 	m_DistanceBetweenCurbs = 1.0;
 	m_VisualizationTime = 0.25;
 	m_bGoNextStep = false;
+	target_frame = "map_zala_0";
+
+	ros::param::get("op_viz_frame",target_frame);
 
 	ros::NodeHandle _nh;
 	UpdatePlanningParams(_nh);
 
 	tf::StampedTransform transform;
 	tf::TransformListener tf_listener;
-	PlannerHNS::ROSHelpers::getTransformFromTF("world", "map", tf_listener, transform);
+	PlannerHNS::ROSHelpers::getTransformFromTF(target_frame, "map", tf_listener, transform);
 	m_OriginPos.position.x  = transform.getOrigin().x();
 	m_OriginPos.position.y  = transform.getOrigin().y();
 	m_OriginPos.position.z  = transform.getOrigin().z();
@@ -235,7 +238,7 @@ void MotionPrediction::callbackGetTrackedObjects(const autoware_msgs::DetectedOb
 	{
 		curr_curbs_obstacles.clear();
 		GenerateCurbsObstacles(curr_curbs_obstacles);
-		PlannerHNS::ROSHelpers::ConvertCurbsMarkers(curr_curbs_obstacles, m_CurbsActual, m_CurbsDummy);
+		PlannerHNS::ROSHelpers::ConvertCurbsMarkers(curr_curbs_obstacles, m_CurbsActual, m_CurbsDummy,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 		pub_CurbsRviz.publish(m_CurbsActual);
 		//std::cout << "Curbs No: " << curr_curbs_obstacles.size() << endl;
 		for(unsigned int i = 0 ; i <curr_curbs_obstacles.size(); i++)
@@ -344,14 +347,14 @@ void MotionPrediction::VisualizePrediction()
 			visualization_msgs::Marker behavior_rviz;
 			std::ostringstream ns_beh;
 			ns_beh << "pred_beh_state_" << i;
-			PlannerHNS::ROSHelpers::VisualizeIntentionState(m_PredictBeh.m_ParticleInfo.at(i)->obj.center, m_PredictBeh.m_ParticleInfo.at(i)->best_behavior_track->best_beh_by_p, behavior_rviz, ns_beh.str(), 3);
+			PlannerHNS::ROSHelpers::VisualizeIntentionState(m_PredictBeh.m_ParticleInfo.at(i)->obj.center, m_PredictBeh.m_ParticleInfo.at(i)->best_behavior_track->best_beh_by_p, behavior_rviz, ns_beh.str(), 3,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 			behavior_rviz_arr.markers.push_back(behavior_rviz);
 		}
 	}
 	pub_BehaviorStateRviz.publish(behavior_rviz_arr);
 
 
-	PlannerHNS::ROSHelpers::ConvertParticles(m_particles_points,m_PredictedParticlesActual, m_PredictedParticlesDummy);
+	PlannerHNS::ROSHelpers::ConvertParticles(m_particles_points,m_PredictedParticlesActual, m_PredictedParticlesDummy,false,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 	pub_ParticlesRviz.publish(m_PredictedParticlesActual);
 
 	//std::cout << "Start Tracking of Trajectories : " <<  m_all_pred_paths.size() << endl;
@@ -360,7 +363,7 @@ void MotionPrediction::VisualizePrediction()
 		PlannerHNS::PlanningHelpers::FixPathDensity(path, 1.0);
 	}
 
-	PlannerHNS::ROSHelpers::ConvertPredictedTrqajectoryMarkers(m_all_pred_paths, m_PredictedTrajectoriesActual, m_PredictedTrajectoriesDummy);
+	PlannerHNS::ROSHelpers::ConvertPredictedTrqajectoryMarkers(m_all_pred_paths, m_PredictedTrajectoriesActual, m_PredictedTrajectoriesDummy,m_OriginPos.position.x,m_OriginPos.position.y,target_frame);
 	pub_PredictedTrajectoriesRviz.publish(m_PredictedTrajectoriesActual);
 
 	m_generated_particles_points.clear();
@@ -385,7 +388,7 @@ void MotionPrediction::VisualizePrediction()
 			m_generated_particles_points.push_back(p_wp);
 		}
 	}
-	PlannerHNS::ROSHelpers::ConvertParticles(m_generated_particles_points,m_GeneratedParticlesActual, m_GeneratedParticlesDummy, true);
+	PlannerHNS::ROSHelpers::ConvertParticles(m_generated_particles_points,m_GeneratedParticlesActual, m_GeneratedParticlesDummy, true,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 	pub_GeneratedParticlesRviz.publish(m_GeneratedParticlesActual);
 
 

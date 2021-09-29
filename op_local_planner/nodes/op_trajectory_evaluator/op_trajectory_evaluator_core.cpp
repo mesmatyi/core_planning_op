@@ -28,13 +28,15 @@ TrajectoryEvalCore::TrajectoryEvalCore()
 	m_bUseMoveingObjectsPrediction = false;
 	m_bKeepCurrentIfPossible = false;
 	m_AdditionalFollowDistance = 10; // meters
+	target_frame = "map_zala_0";
 
 	ros::NodeHandle _nh;
 	UpdatePlanningParams(_nh);
+	ros::param::get("op_viz_frame",target_frame);
 
 	tf::StampedTransform transform;
 	tf::TransformListener tf_listener;
-	PlannerHNS::ROSHelpers::getTransformFromTF("world", "map", tf_listener, transform);
+	PlannerHNS::ROSHelpers::getTransformFromTF(target_frame, "map", tf_listener, transform);
 	m_OriginPos.position.x  = transform.getOrigin().x();
 	m_OriginPos.position.y  = transform.getOrigin().y();
 	m_OriginPos.position.z  = transform.getOrigin().z();
@@ -474,9 +476,9 @@ void TrajectoryEvalCore::MainLoop()
 
 //					collected_local_roll_outs.push_back(m_TrajectoryCostsCalculator.local_roll_outs_);
 //					collected_trajectory_costs.push_back(m_TrajectoryCostsCalculator.trajectory_costs_);
-					PlannerHNS::ROSHelpers::TrajectoriesToColoredMarkers(m_TrajectoryCostsCalculator.local_roll_outs_, m_TrajectoryCostsCalculator.trajectory_costs_, tc.index, all_rollOuts);
+					PlannerHNS::ROSHelpers::TrajectoriesToColoredMarkers(m_TrajectoryCostsCalculator.local_roll_outs_, m_TrajectoryCostsCalculator.trajectory_costs_, tc.index, all_rollOuts,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 					collision_points.insert(collision_points.end(), m_TrajectoryCostsCalculator.collision_points_.begin(), m_TrajectoryCostsCalculator.collision_points_.end());
-					PlannerHNS::ROSHelpers::ConvertFromPlannerHRectangleToAutowareRviz(m_TrajectoryCostsCalculator.safety_border_.points, safety_box);
+					PlannerHNS::ROSHelpers::ConvertFromPlannerHRectangleToAutowareRviz(m_TrajectoryCostsCalculator.safety_border_.points, safety_box,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 
 				}
 				else if(m_GlobalPathSections.size() == m_LanesRollOutsToUse.size())
@@ -525,9 +527,9 @@ void TrajectoryEvalCore::MainLoop()
 //						collected_local_roll_outs.push_back(m_TrajectoryCostsCalculator.local_roll_outs_);
 //						collected_trajectory_costs.push_back(m_TrajectoryCostsCalculator.trajectory_costs_);
 
-						PlannerHNS::ROSHelpers::TrajectoriesToColoredMarkers(m_TrajectoryCostsCalculator.local_roll_outs_, m_TrajectoryCostsCalculator.trajectory_costs_, temp_tc.index, all_rollOuts);
+						PlannerHNS::ROSHelpers::TrajectoriesToColoredMarkers(m_TrajectoryCostsCalculator.local_roll_outs_, m_TrajectoryCostsCalculator.trajectory_costs_, temp_tc.index, all_rollOuts,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 						collision_points.insert(collision_points.end(), m_TrajectoryCostsCalculator.collision_points_.begin(), m_TrajectoryCostsCalculator.collision_points_.end());
-						PlannerHNS::ROSHelpers::ConvertFromPlannerHRectangleToAutowareRviz(m_TrajectoryCostsCalculator.safety_border_.points, safety_box);
+						PlannerHNS::ROSHelpers::ConvertFromPlannerHRectangleToAutowareRviz(m_TrajectoryCostsCalculator.safety_border_.points, safety_box,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 					}
 
 					PlannerHNS::EvaluationParams eval_params_for_lane_change = m_EvaluationParams;
@@ -558,7 +560,7 @@ void TrajectoryEvalCore::MainLoop()
 						pub_LocalWeightedTrajectories.publish(local_lanes);
 
 						//Visualize results
-						PlannerHNS::ROSHelpers::ConvertCollisionPointsMarkers(collision_points, m_CollisionsActual, m_CollisionsDummy);
+						PlannerHNS::ROSHelpers::ConvertCollisionPointsMarkers(collision_points, m_CollisionsActual, m_CollisionsDummy,target_frame,m_OriginPos.position.x,m_OriginPos.position.y);
 						pub_CollisionPointsRviz.publish(m_CollisionsActual);
 						pub_SafetyBorderRviz.publish(safety_box);
 						pub_LocalWeightedTrajectoriesRviz.publish(all_rollOuts);

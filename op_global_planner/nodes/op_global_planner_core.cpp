@@ -39,6 +39,7 @@ GlobalPlanner::GlobalPlanner()
 	m_bReplanSignal = false;
 	m_GlobalPathID = 1;
 	m_bStart = false;
+	target_frame = "map_zala_0";
 	UtilityHNS::UtilityH::GetTickCount(m_WaitingTimer);
 	UtilityHNS::UtilityH::GetTickCount(m_ReplanningTimer);
 
@@ -49,6 +50,9 @@ GlobalPlanner::GlobalPlanner()
 	nh.getParam("/op_global_planner/enableRvizInput" , m_params.bEnableRvizInput);
 	nh.getParam("/op_global_planner/enableHMI" , m_params.bEnableHMI);
 	nh.getParam("/op_global_planner/experimentName" , m_params.exprimentName);
+
+	ros::param::get("op_viz_frame",target_frame);
+	
 	if(m_params.exprimentName.size() > 0)
 	{
 		if(m_params.exprimentName.at(m_params.exprimentName.size()-1) != '/')
@@ -120,7 +124,7 @@ GlobalPlanner::GlobalPlanner()
 
 	tf::StampedTransform transform;
 	tf::TransformListener tf_listener;
-	PlannerHNS::ROSHelpers::getTransformFromTF("world", "map", tf_listener, transform);
+	PlannerHNS::ROSHelpers::getTransformFromTF(target_frame, "map", tf_listener, transform);
 	m_OriginPos.position.x  = transform.getOrigin().x();
 	m_OriginPos.position.y  = transform.getOrigin().y();
 	m_OriginPos.position.z  = transform.getOrigin().z();
@@ -631,9 +635,9 @@ void GlobalPlanner::VisualizeAndSend(const std::vector<std::vector<PlannerHNS::W
 	total_color.g = 0.7;
 	total_color.b = 1.0;
 	total_color.a = 0.9;
-	PlannerHNS::ROSHelpers::createGlobalLaneArrayMarker(total_color, lane_array, pathsToVisualize);
-	PlannerHNS::ROSHelpers::createGlobalLaneArrayOrientationMarker(lane_array, pathsToVisualize);
-	PlannerHNS::ROSHelpers::createGlobalLaneArrayVelocityMarker(lane_array, pathsToVisualize);
+	PlannerHNS::ROSHelpers::createGlobalLaneArrayMarker(total_color, lane_array, pathsToVisualize,m_OriginPos.position.x,m_OriginPos.position.y,target_frame);
+	PlannerHNS::ROSHelpers::createGlobalLaneArrayOrientationMarker(lane_array, pathsToVisualize,m_OriginPos.position.x,m_OriginPos.position.y,target_frame);
+	PlannerHNS::ROSHelpers::createGlobalLaneArrayVelocityMarker(lane_array, pathsToVisualize,m_OriginPos.position.x,m_OriginPos.position.y,target_frame);
 
 	if((m_bFirstStartHMI && m_params.bEnableHMI) || !m_params.bEnableHMI)
 	{
@@ -844,18 +848,22 @@ void GlobalPlanner::MainLoop()
 	ros::Rate loop_rate(25);
 	UtilityHNS::UtilityH::GetTickCount(m_animation_timer);
 
+	std::cout << "Before Map load\n";
 	while (ros::ok())
 	{
 		ros::spinOnce();
 		//LoadMap();
+
 		if(!m_MapHandler.IsMapLoaded())
 		{
+			std::cout << "Map gets Ready to load\n";
 			m_MapHandler.LoadMap(m_Map, m_params.bEnableLaneChange);
 
 			if(m_MapHandler.IsMapLoaded())
 			{
+				std::cout << "Map is loadedf yeah boy !\n";
 				visualization_msgs::MarkerArray map_marker_array;
-				PlannerHNS::ROSHelpers::ConvertFromRoadNetworkToAutowareVisualizeMapFormat(m_Map, map_marker_array);
+				PlannerHNS::ROSHelpers::ConvertFromRoadNetworkToAutowareVisualizeMapFormat(m_Map, map_marker_array,false,m_OriginPos.position.x,m_OriginPos.position.y,target_frame);
 				pub_MapRviz.publish(map_marker_array);
 			}
 		}
