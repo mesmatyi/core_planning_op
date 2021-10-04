@@ -27,7 +27,7 @@
 	<arg name="enableSwerving" 				default="true" />
 	<arg name="enableFollowing" 			default="true" />	
 	<arg name="enableTrafficLightBehavior" 	default="false" />
-	<arg name="enableStopSignBehavior" 		default="false" />	
+<arg name="enableStopSignBehavior" 		default="false" />	
 	<arg name="enableLaneChange" 			default="true" />	
 	
 	<!-- Vehicle Info, shared with controller and simulation -->

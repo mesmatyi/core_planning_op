@@ -4,7 +4,7 @@
 	<arg name="min_prediction_distance" default="1.5"/> <!-- in meters -->
 	<arg name="min_prediction_time" 	default="1.5"/> <!-- in seconds -->
 	<arg name="enableGenrateBranches" 	default="false"/>
-	<arg name="enableCurbObstacles" 	default="false" />
+	<arg name="enableCurbObstacles" 	default="true" />
 	<arg name="distanceBetweenCurbs" 	default="2.0" />
 	<arg name="visualizationTime" 		default="0.01" />
 	<arg name="enableStepByStepSignal" 	default="false" />

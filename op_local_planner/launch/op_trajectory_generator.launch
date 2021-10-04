@@ -3,7 +3,7 @@
 	<arg name="samplingTipMargin" 		default="4"  /> 
 	<arg name="samplingOutMargin" 		default="12" /> 
 	<arg name="samplingSpeedFactor" 	default="1.0" />		
-	<arg name="enableHeadingSmoothing" 	default="false" />
+	<arg name="enableHeadingSmoothing" 	default="true" />
 	<arg name="startFromFrontAxel" 		default="false" />
 	<arg name="enableForwardSimulation"	default="false" />
 			
