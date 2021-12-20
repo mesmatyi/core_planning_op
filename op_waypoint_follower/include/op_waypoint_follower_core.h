@@ -20,6 +20,11 @@
 #include "op_planner/control/MotionSimulator.h"
 #include "op_ros_helpers/ROSVelocityHandler.h"
 
+#include <dynamic_reconfigure/server.h>
+#include <op_waypoint_follower/pid_tuneConfig.h>
+
+extern double k_P,k_I,k_D;
+
 namespace op_waypoint_follower
 {
 

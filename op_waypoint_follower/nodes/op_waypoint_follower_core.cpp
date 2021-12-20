@@ -8,6 +8,8 @@
 #include "op_ros_helpers/op_ROSHelpers.h"
 #include "math.h"
 
+double k_P,k_I,k_D;
+
 namespace op_waypoint_follower
 {
 
@@ -422,6 +424,8 @@ void WaypointFollower::RunMainLoop()
 
 		curr_dt = UtilityHNS::UtilityH::GetTimeDiffNow(dt_timer);
 		UtilityHNS::UtilityH::GetTickCount(dt_timer);
+		
+		m_PathFollower.setPID(k_P,k_I,k_D);
 
 		dt_list.push_back(curr_dt);
 		if(dt_list.size() > freq)

@@ -15,8 +15,12 @@ find_package(
   op_planner  
   op_utility
   roscpp
+  dynamic_reconfigure
 )
 
+generate_dynamic_reconfigure_options(
+  cfg/pid_tune.cfg
+)
 catkin_package(
   INCLUDE_DIRS include
   CATKIN_DEPENDS
@@ -27,8 +31,11 @@ catkin_package(
     map_file
     op_planner    
     op_utility
+    dynamic_reconfigure
 )
 
+#add dynamic reconfigure api
+#find_package(catkin REQUIRED dynamic_reconfigure)
 ## SET(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wno-unused-result -DROS ${CMAKE_CXX_FLAGS}")
 
 include_directories(
@@ -49,14 +56,18 @@ target_link_libraries(
   ${OpenCV_LIBS}
 )
 
+
+
 #link_directories(/usr/local/lib/zmp/minivan)
 #add_executable(op_waypoint_follower nodes/op_waypoint_follower.cpp nodes/op_waypoint_follower_core.cpp )
 #target_link_libraries(op_waypoint_follower utilityh plannerh CANUSB  ${catkin_LIBRARIES})
 
 add_dependencies(
   op_waypoint_follower
+  
   ${catkin_EXPORTED_TARGETS}
 )
+add_dependencies(op_waypoint_follower ${PROJECT_NAME}_gencfg)
 
 install(
   TARGETS op_waypoint_follower
