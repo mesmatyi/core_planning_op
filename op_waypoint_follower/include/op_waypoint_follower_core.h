@@ -11,6 +11,7 @@
 #include <tf/tf.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <std_msgs/Float32.h>
 #include "autoware_msgs/LaneArray.h"
 #include "autoware_msgs/ControlCommandStamped.h"
 #include "autoware_msgs/VehicleCmd.h"
@@ -23,7 +24,7 @@
 #include <dynamic_reconfigure/server.h>
 #include <op_waypoint_follower/pid_tuneConfig.h>
 
-extern double k_P,k_I,k_D;
+extern double k_P,k_I,k_D,lookahead;
 
 namespace op_waypoint_follower
 {
@@ -84,6 +85,8 @@ protected:
 	ros::Publisher pub_FollowPointRviz;
 	ros::Publisher pub_VelocityRviz;
 	ros::Publisher pub_VehicleCommandOP;
+	ros::Publisher op_yaw_pub;
+	ros::Publisher op_angle_e;
 
 	// define subscribers.
 	ros::Subscriber sub_initialpose;
