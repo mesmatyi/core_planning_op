@@ -4,11 +4,17 @@ void callback(op_waypoint_follower::pid_tuneConfig &config, uint32_t level) {
 	k_P = config.k_P;
 	k_I = config.k_I;
 	k_D = config.k_D;
+	lookahead = config.lookahead;
+
+	std::cout << "From dynamic callback \n";
+	std::cout << k_P << " " << k_I << " " << k_D << "\n";
 }
 
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "op_waypoint_follower");
+
+
 
 	dynamic_reconfigure::Server<op_waypoint_follower::pid_tuneConfig> server;
   	dynamic_reconfigure::Server<op_waypoint_follower::pid_tuneConfig>::CallbackType f;

@@ -8,7 +8,7 @@
 #include "op_ros_helpers/op_ROSHelpers.h"
 #include "math.h"
 
-double k_P,k_I,k_D;
+double k_P,k_I,k_D,lookahead;
 
 namespace op_waypoint_follower
 {
@@ -38,12 +38,16 @@ WaypointFollower::WaypointFollower()
 	pub_SimuLocalizerPose = _nh.advertise<geometry_msgs::PoseStamped>(m_Topics.localizer_pose_topic_name, 1);
 	pub_SimuVelocity = _nh.advertise<geometry_msgs::TwistStamped>(m_Topics.velocity_topic_name, 1);
 	pub_SimuVehicleStatus = _nh.advertise<autoware_msgs::VehicleStatus>(m_Topics.vehicle_status_topic_name, 1);
+	op_yaw_pub = _nh.advertise<std_msgs::Float32>("op_yaw",1);
+	op_angle_e = _nh.advertise<std_msgs::Float32>("op_angle_error",1);
+
 
 	//For rviz visualization
 	pub_CurrPoseRviz = _nh.advertise<visualization_msgs::Marker>("op_curr_simu_pose", 1);
 	pub_ForwardSimuPoseRviz = _nh.advertise<visualization_msgs::Marker>("op_forward_simu_pose", 1);
 	pub_FollowPointRviz	= _nh.advertise<visualization_msgs::Marker>("follow_pose", 1);
 	pub_VelocityRviz = _nh.advertise<std_msgs::Float32>("linear_velocity_viz", 1);
+	
 
 	// define subscribers.
 	sub_current_pose = _nh.subscribe("/current_pose", 1, &WaypointFollower::callbackGetCurrentPose, this);
@@ -199,7 +203,15 @@ void WaypointFollower::callbackGetInitPose(const geometry_msgs::PoseWithCovarian
 
 void WaypointFollower::callbackGetCurrentPose(const geometry_msgs::PoseStampedConstPtr& msg)
 {
-	m_CurrentPos.pos = PlannerHNS::GPSPoint(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z, tf::getYaw(msg->pose.orientation));
+	tf::Quaternion q(
+        msg->pose.orientation.x,
+        msg->pose.orientation.y,
+        msg->pose.orientation.z,
+        msg->pose.orientation.w);
+    tf::Matrix3x3 m(q);
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+	m_CurrentPos.pos = PlannerHNS::GPSPoint(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z, yaw);
 	bNewCurrentPos = true;
 }
 
@@ -367,11 +379,12 @@ void WaypointFollower::SimulatedMoveStep(double dt)
 
 void WaypointFollower::PathFollowingStep(double dt)
 {
+	double angle_error;
 	//To Define steering delay function based on velocity , the following is a piecewise first order linear function
 	//c_params.SteeringDelay = m_ControlParams.SteeringDelay / (1.0- UtilityHNS::UtilityH::GetMomentumScaleFactor(m_CurrVehicleStatus.speed));
 
 #ifndef AVOID_USING_TWIST_FILTER
-	m_curr_target_status = m_PathFollower.DoOneStep(dt, m_CurrentBehavior, m_Path, m_CurrentPos, m_CurrVehicleStatus, bNewTrajectory);
+	m_curr_target_status = m_PathFollower.DoOneStep(dt, m_CurrentBehavior, m_Path, m_CurrentPos, m_CurrVehicleStatus, bNewTrajectory,angle_error);
 #else
 	//This modification to avoid using twist gate or twist filter
 	m_curr_target_status = m_PathFollower.DoOneStep(dt, m_CurrentBehavior, m_Path, m_State.getStatePose(), m_curr_motion_status, bNewTrajectory);
@@ -396,6 +409,12 @@ void WaypointFollower::PathFollowingStep(double dt)
 	ctrl_raw.cmd.steering_angle = m_curr_target_status.steer;
 	ctrl_raw.cmd.linear_acceleration = m_curr_target_status.target_accel;
 	pub_ControlRaw.publish(ctrl_raw);
+	std_msgs::Float32 yaw;
+	yaw.data = (float) m_CurrentPos.pos.a;
+	op_yaw_pub.publish(yaw);
+
+	yaw.data = angle_error;
+	op_angle_e.publish(yaw);
 
 	//publish vehicle status in case of simulation, later in case of controlling a real vehicle directly from this node
 	if(m_iSimulationMode == 2)
@@ -426,6 +445,7 @@ void WaypointFollower::RunMainLoop()
 		UtilityHNS::UtilityH::GetTickCount(dt_timer);
 		
 		m_PathFollower.setPID(k_P,k_I,k_D);
+		m_PathFollower.setLookahead(lookahead);
 
 		dt_list.push_back(curr_dt);
 		if(dt_list.size() > freq)
